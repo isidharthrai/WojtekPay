@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { BottomNav } from './components/BottomNav';
 import { NumberPad } from './components/NumberPad';
@@ -43,7 +42,7 @@ const App: React.FC = () => {
   const [amount, setAmount] = useState<string>('');
   const [note, setNote] = useState<string>('');
   const [pin, setPin] = useState<string>('');
-  const [flowType, setFlowType] = useState<'PAYMENT' | 'INVEST' | 'BALANCE' | 'LOAN' | 'INTL'>('PAYMENT');
+  const [flowType, setFlowType] = useState<'PAYMENT' | 'INVEST' | 'BALANCE' | 'LOAN' | 'INTL' | 'SELL'>('PAYMENT');
   const [recurrence, setRecurrence] = useState<string | undefined>(undefined);
 
   // --- BALANCE CHECK STATE ---
@@ -241,7 +240,6 @@ const App: React.FC = () => {
     }
 
     if (flowType === 'INVEST' && selectedStock) {
-        // Investment Logic
         const qty = Math.floor(Number(amount) / selectedStock.price);
         setTimeout(() => {
              setHoldings(prev => {
@@ -250,6 +248,28 @@ const App: React.FC = () => {
                 return [...prev, { symbol: selectedStock!.symbol, quantity: qty, avgPrice: selectedStock!.price }];
              });
              setBalance(prev => prev - Number(amount));
+             setCurrentView(AppView.SUCCESS);
+        }, 800);
+        return;
+    }
+
+    if (flowType === 'SELL' && selectedStock) {
+        const sellAmount = Number(amount);
+        const qtyToSell = Math.floor(sellAmount / selectedStock.price);
+        
+        setTimeout(() => {
+             setHoldings(prev => {
+                const existing = prev.find(h => h.symbol === selectedStock!.symbol);
+                if(!existing) return prev;
+                const newQty = Math.max(0, existing.quantity - qtyToSell);
+                if (newQty === 0) return prev.filter(h => h.symbol !== selectedStock!.symbol);
+                return prev.map(h => h.symbol === selectedStock!.symbol ? {...h, quantity: newQty} : h);
+             });
+             setBalance(prev => prev + sellAmount);
+             const newTx: Transaction = {
+                id: `tx_${Date.now()}`, recipient: "Investment Sell", amount: sellAmount, date: 'Just now', type: 'credit', status: 'success', category: 'Investment', note: `Sold ${selectedStock.symbol}`
+             };
+             setTransactions([newTx, ...transactions]);
              setCurrentView(AppView.SUCCESS);
         }, 800);
         return;
@@ -291,14 +311,15 @@ const App: React.FC = () => {
   };
 
   // --- RENDER ---
+  // Using h-[100dvh] ensures it fits the mobile screen correctly including address bars
   return (
-    <div className="w-full h-full bg-white dark:bg-gray-900 transition-colors duration-300 relative mx-auto max-w-md shadow-2xl overflow-hidden">
+    <div className="w-full h-[100dvh] bg-white dark:bg-gray-900 transition-colors duration-300 relative mx-auto md:max-w-md md:shadow-2xl md:h-[90vh] md:mt-8 md:rounded-3xl overflow-hidden flex flex-col">
         {showSupport && <SupportChat onClose={() => setShowSupport(false)} userProfile={userProfile} balance={balance} transactions={transactions} stocks={stocks} holdings={holdings} />}
         
         {currentView === AppView.LOGIN && <Auth onLoginSuccess={handleLoginSuccess} />}
 
         {isAuthenticated && (
-            <>
+            <div className="flex-1 flex flex-col overflow-hidden relative">
                 {currentView === AppView.HOME && (
                     <Home 
                         userProfile={userProfile}
@@ -391,11 +412,23 @@ const App: React.FC = () => {
                 {currentView === AppView.STOCK_DETAIL && selectedStock && (
                     <StockDetail 
                         stock={selectedStock}
+                        userHolding={holdings.find(h => h.symbol === selectedStock.symbol)}
                         onBack={() => setCurrentView(AppView.INVEST_HOME)}
                         onToggleWatchlist={(s) => setWatchlist(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s])}
                         isWatchlisted={watchlist.includes(selectedStock.symbol)}
                         onCreateAlert={() => alert("Alert Set!")}
-                        onBuy={() => { setRecipient(`Invest: ${selectedStock.name}`); setAmount(selectedStock.price.toString()); setFlowType('INVEST'); setCurrentView(AppView.PAY_FORM); }}
+                        onBuy={() => { 
+                            setRecipient(`Invest: ${selectedStock.name}`); 
+                            setAmount(selectedStock.price.toString()); 
+                            setFlowType('INVEST'); 
+                            setCurrentView(AppView.PAY_FORM); 
+                        }}
+                        onSell={() => {
+                            setRecipient(`Sell: ${selectedStock.name}`);
+                            setAmount(selectedStock.price.toString());
+                            setFlowType('SELL');
+                            setCurrentView(AppView.PAY_FORM);
+                        }}
                     />
                 )}
 
@@ -423,7 +456,8 @@ const App: React.FC = () => {
                     <PayForm 
                         recipient={recipient} amount={amount} setAmount={setAmount} 
                         onBack={() => setCurrentView(AppView.HOME)} 
-                        onProceed={() => setCurrentView(AppView.PIN_ENTRY)} 
+                        onProceed={() => setCurrentView(AppView.PIN_ENTRY)}
+                        title={flowType === 'SELL' ? `Sell ${selectedStock?.symbol}` : undefined}
                     />
                 )}
                 {currentView === AppView.PIN_ENTRY && (
@@ -457,7 +491,7 @@ const App: React.FC = () => {
                 {[AppView.HOME, AppView.HISTORY, AppView.AI_PAY].includes(currentView) && (
                     <BottomNav currentView={currentView} onChange={handleNavigate} />
                 )}
-            </>
+            </div>
         )}
     </div>
   );
