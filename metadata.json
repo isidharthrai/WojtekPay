@@ -1,0 +1,7 @@
+{
+  "name": "WojtekPay",
+  "description": "A next-generation AI-powered UPI payment simulation app featuring natural language payment parsing and a modern, mobile-first interface.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
