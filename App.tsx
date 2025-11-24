@@ -331,6 +331,7 @@ const App: React.FC = () => {
                         onContactSelect={(c) => initPayment(c.name, c.upiId)}
                         onSelfTransfer={() => initPayment("My HDFC Account")}
                         onBillerClick={handleBillerSelect}
+                        onPayToNumber={(num) => initPayment(`+91 ${num}`)}
                         recentContacts={RECENT_CONTACTS}
                         contactSearch={contactSearch}
                         setContactSearch={setContactSearch}
@@ -457,7 +458,7 @@ const App: React.FC = () => {
                         recipient={recipient} amount={amount} setAmount={setAmount} 
                         onBack={() => setCurrentView(AppView.HOME)} 
                         onProceed={() => setCurrentView(AppView.PIN_ENTRY)}
-                        title={flowType === 'SELL' ? `Sell ${selectedStock?.symbol}` : undefined}
+                        title={flowType === 'SELL' && selectedStock ? `Sell ${selectedStock.symbol}` : undefined}
                     />
                 )}
                 {currentView === AppView.PIN_ENTRY && (
