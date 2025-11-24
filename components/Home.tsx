@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   QrCode, Smartphone, Landmark, ArrowUpRight, Globe2, TrendingUp, Coins, HelpCircle, 
-  Settings, Scan, Search, Wallet, ShieldCheck, MoreHorizontal, Zap, Tv, Wifi, Flame, Droplet
+  Wallet, Scan, Search, ShieldCheck, MoreHorizontal, Zap, Tv, Wifi, Flame, Droplet
 } from 'lucide-react';
 import { UserProfile, Contact, AppView } from '../types';
 
@@ -68,8 +68,15 @@ export const Home: React.FC<Props> = ({
           </div>
         </div>
         <div className="flex gap-2">
-            <button onClick={onSettings} className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-full shadow-sm"><Settings size={20} /></button>
-            <button onClick={onScan} className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-full shadow-sm"><Scan size={20} /></button>
+            <button 
+                onClick={onCheckBalance} 
+                className="p-2 text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 rounded-full shadow-sm transition-colors border border-blue-100 dark:border-blue-800"
+            >
+                <Wallet size={20} />
+            </button>
+            <button onClick={onScan} className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-full shadow-sm">
+                <Scan size={20} />
+            </button>
         </div>
       </div>
 
