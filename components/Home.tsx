@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
   QrCode, Smartphone, Landmark, ArrowUpRight, Globe2, TrendingUp, Coins, HelpCircle, 
-  Wallet, Scan, Search, ShieldCheck, MoreHorizontal, Zap, Tv, Wifi, Flame, Droplet
+  Wallet, Scan, Search, ShieldCheck, MoreHorizontal, Zap, Tv, Wifi, Flame, Droplet, ArrowRight
 } from 'lucide-react';
 import { UserProfile, Contact, AppView } from '../types';
+import { isValidIndianPhone } from '../services/validation';
 
 interface Props {
   userProfile: UserProfile;
@@ -15,6 +16,7 @@ interface Props {
   onContactSelect: (contact: Contact) => void;
   onSelfTransfer: () => void;
   onBillerClick: (category: string) => void;
+  onPayToNumber: (num: string) => void;
   recentContacts: Contact[];
   contactSearch: string;
   setContactSearch: (s: string) => void;
@@ -22,7 +24,7 @@ interface Props {
 
 export const Home: React.FC<Props> = ({ 
   userProfile, balance, onNavigate, onScan, onSettings, onCheckBalance, 
-  onContactSelect, onSelfTransfer, onBillerClick, recentContacts, contactSearch, setContactSearch 
+  onContactSelect, onSelfTransfer, onBillerClick, onPayToNumber, recentContacts, contactSearch, setContactSearch 
 }) => {
   
   const filteredContacts = recentContacts.filter(contact => 
@@ -56,6 +58,10 @@ export const Home: React.FC<Props> = ({
       b.label.toLowerCase().includes(contactSearch.toLowerCase()) || 
       b.category.toLowerCase().includes(contactSearch.toLowerCase())
   );
+
+  const isPhoneNumber = isValidIndianPhone(contactSearch);
+  // Check if phone number is not already in filtered contacts (avoid duplicates)
+  const isNewNumber = isPhoneNumber && !filteredContacts.some(c => c.name.includes(contactSearch) || c.upiId.includes(contactSearch));
 
   return (
     <div className="flex-1 pb-24 pt-6 px-4 space-y-6 overflow-y-auto no-scrollbar bg-white dark:bg-gray-900 transition-colors duration-300 touch-pan-y">
@@ -98,6 +104,25 @@ export const Home: React.FC<Props> = ({
           className="w-full bg-transparent dark:text-white rounded-2xl pl-12 pr-4 py-4 text-base outline-none placeholder:text-gray-400" 
         />
       </div>
+      
+      {/* Pay to New Number Action */}
+      {isNewNumber && (
+          <button 
+            onClick={() => onPayToNumber(contactSearch)}
+            className="w-full flex items-center justify-between p-4 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 dark:shadow-none animate-pop-in active:scale-[0.98] transition-all"
+          >
+             <div className="flex items-center gap-3">
+                 <div className="p-2 bg-white/20 rounded-full">
+                    <Smartphone size={20}/>
+                 </div>
+                 <div className="text-left">
+                     <p className="text-xs opacity-80 font-medium uppercase">Pay to Mobile</p>
+                     <p className="font-bold text-lg">+91 {contactSearch}</p>
+                 </div>
+             </div>
+             <ArrowRight size={20} />
+         </button>
+      )}
 
       {/* Quick Actions */}
       <div>
@@ -162,12 +187,12 @@ export const Home: React.FC<Props> = ({
       )}
 
       {/* No results state */}
-      {contactSearch && filteredContacts.length === 0 && filteredBillers.length === 0 && (
+      {contactSearch && !isNewNumber && filteredContacts.length === 0 && filteredBillers.length === 0 && (
           <div className="text-center py-8 text-gray-400">
               <Search size={32} className="mx-auto mb-2 opacity-50"/>
               <p className="text-sm">No contacts or billers found.</p>
               <button className="mt-2 text-blue-600 font-bold text-sm" onClick={() => onNavigate(AppView.CONTACT_LIST)}>
-                  Search Mobile Number
+                  Search in Contacts
               </button>
           </div>
       )}
