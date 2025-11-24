@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { ChevronLeft, Check, Landmark, Loader2, Search, ChevronRight } from 'lucide-react';
 import { Biller } from '../types';
 
 interface PayFormProps {
   recipient: string;
   amount: string;
-  setAmount: (a: string) => void;
+  setAmount: Dispatch<SetStateAction<string>>;
   onBack: () => void;
   onProceed: () => void;
+  title?: string;
 }
 
-export const PayForm: React.FC<PayFormProps> = ({ recipient, amount, setAmount, onBack, onProceed }) => {
+export const PayForm: React.FC<PayFormProps> = ({ recipient, amount, setAmount, onBack, onProceed, title }) => {
   return (
    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
-      <div className="flex items-center p-4 text-gray-900 dark:text-white"><button onClick={onBack}><ChevronLeft/></button><span className="ml-4 font-bold">Pay {recipient}</span></div>
+      <div className="flex items-center p-4 text-gray-900 dark:text-white"><button onClick={onBack}><ChevronLeft/></button><span className="ml-4 font-bold">{title || `Pay ${recipient}`}</span></div>
       <div className="flex-1 flex flex-col items-center justify-center p-6">
            <div className="relative w-full">
             <span className="absolute left-1/2 -translate-x-12 top-1 text-4xl font-bold text-gray-400">₹</span>
@@ -31,7 +32,7 @@ export const PayForm: React.FC<PayFormProps> = ({ recipient, amount, setAmount, 
              disabled={!amount}
              className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg disabled:opacity-50"
            >
-             PROCEED TO PAY
+             PROCEED
            </button>
       </div>
    </div>
@@ -44,7 +45,7 @@ export const SuccessScreen: React.FC<{ onDone: () => void }> = ({ onDone }) => {
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 text-green-600">
             <Check size={40} strokeWidth={4} />
         </div>
-        <h2 className="text-2xl font-bold">Payment Successful!</h2>
+        <h2 className="text-2xl font-bold">Successful!</h2>
         <p className="text-green-100 mt-2">Transaction Completed</p>
         <button onClick={onDone} className="mt-12 bg-white text-green-600 px-8 py-3 rounded-full font-bold shadow-lg">Done</button>
     </div>
