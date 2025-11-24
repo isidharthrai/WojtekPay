@@ -26,8 +26,8 @@ export const Home: React.FC<Props> = ({
 }) => {
   
   const filteredContacts = recentContacts.filter(contact => 
-    contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
-    contact.upiId.toLowerCase().includes(contactSearch.toLowerCase())
+    (contact.name?.toLowerCase() || '').includes(contactSearch?.toLowerCase() || '') ||
+    (contact.upiId?.toLowerCase() || '').includes(contactSearch?.toLowerCase() || '')
   );
 
   const actions = [
@@ -52,7 +52,7 @@ export const Home: React.FC<Props> = ({
   ];
 
   return (
-    <div className="pb-24 pt-6 px-4 space-y-6 h-full overflow-y-auto no-scrollbar bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="flex-1 pb-24 pt-6 px-4 space-y-6 overflow-y-auto no-scrollbar bg-white dark:bg-gray-900 transition-colors duration-300 touch-pan-y">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onClick={onSettings}>
@@ -75,7 +75,7 @@ export const Home: React.FC<Props> = ({
 
       {/* Balance Card */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-200 dark:shadow-none relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-2xl"></div>
         <div className="flex justify-between items-start mb-4 relative z-10">
           <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">
             <Wallet size={24} className="text-white" />
@@ -125,7 +125,7 @@ export const Home: React.FC<Props> = ({
       
       <div>
         <h3 className="font-bold text-gray-800 dark:text-white mb-4">Recent Contacts</h3>
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 min-h-[90px]">
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 min-h-[90px] touch-pan-x">
           {filteredContacts.length > 0 ? (
             filteredContacts.map((contact) => (
               <button 
