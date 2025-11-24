@@ -1,7 +1,6 @@
-
 import React, { useRef } from 'react';
 import { 
-  Search, X, TrendingUp, Star, Info, Bell, FileSpreadsheet, Loader2, ChevronLeft 
+  Search, X, TrendingUp, Star, Info, Bell, FileSpreadsheet, Loader2, ChevronLeft, Wallet 
 } from 'lucide-react';
 import { Stock, StockHolding, StockAlert } from '../types';
 import { StockChart } from './StockChart';
@@ -31,18 +30,25 @@ export const InvestHome: React.FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const market = getMarketStatus();
 
-  let filteredStocks = stocks.filter(s => s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.symbol.toLowerCase().includes(stockSearch.toLowerCase()));
+  let filteredStocks = stocks.filter(s => 
+    (s.name?.toLowerCase() || '').includes(stockSearch?.toLowerCase() || '') || 
+    (s.symbol?.toLowerCase() || '').includes(stockSearch?.toLowerCase() || '')
+  );
+  
   if (investTab === 'WATCHLIST') {
-      filteredStocks = stocks.filter(s => watchlist.includes(s.symbol));
+      filteredStocks = stocks.filter(s => (watchlist || []).includes(s.symbol));
       if (stockSearch) {
-          filteredStocks = filteredStocks.filter(s => s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.symbol.toLowerCase().includes(stockSearch.toLowerCase()));
+          filteredStocks = filteredStocks.filter(s => 
+            (s.name?.toLowerCase() || '').includes(stockSearch?.toLowerCase() || '') || 
+            (s.symbol?.toLowerCase() || '').includes(stockSearch?.toLowerCase() || '')
+          );
       }
   }
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
          {/* Header */}
-        <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10">
+        <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 z-10">
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-3">
                      <button onClick={onBack}><ChevronLeft className="text-gray-600 dark:text-gray-300" /></button>
@@ -86,7 +92,7 @@ export const InvestHome: React.FC<Props> = ({
             )}
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 touch-pan-y">
             {investTab === 'HOLDINGS' ? (
                  <div className="p-4 space-y-4">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -140,7 +146,7 @@ export const InvestHome: React.FC<Props> = ({
                                 const ret = currVal - (h.avgPrice * h.quantity);
                                 
                                 return (
-                                    <div key={h.symbol} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                    <div key={h.symbol} onClick={() => stock && onStockClick(stock)} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow">
                                         <div className="flex justify-between mb-2">
                                             <h4 className="font-bold text-gray-900 dark:text-white">{h.symbol}</h4>
                                             <span className="text-xs text-gray-500">Qty: {h.quantity}</span>
@@ -214,14 +220,16 @@ export const InvestHome: React.FC<Props> = ({
 
 interface DetailProps {
     stock: Stock;
+    userHolding?: StockHolding;
     onBack: () => void;
     onToggleWatchlist: (s: string) => void;
     isWatchlisted: boolean;
     onCreateAlert: () => void;
     onBuy: () => void;
+    onSell: () => void;
 }
 
-export const StockDetail: React.FC<DetailProps> = ({ stock, onBack, onToggleWatchlist, isWatchlisted, onCreateAlert, onBuy }) => {
+export const StockDetail: React.FC<DetailProps> = ({ stock, userHolding, onBack, onToggleWatchlist, isWatchlisted, onCreateAlert, onBuy, onSell }) => {
     const isUp = stock.change >= 0;
     return (
         <div className="h-full flex flex-col bg-white dark:bg-gray-900 transition-colors">
@@ -233,7 +241,7 @@ export const StockDetail: React.FC<DetailProps> = ({ stock, onBack, onToggleWatc
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-24 pt-4">
+            <div className="flex-1 overflow-y-auto px-4 pb-24 pt-4 touch-pan-y">
                 <div className="flex items-center gap-4 mb-6">
                     <img src={stock.logoUrl} className="w-16 h-16 rounded-xl border border-gray-100 bg-white object-contain p-2" onError={(e) => (e.currentTarget.src = `https://ui-avatars.com/api/?name=${stock.symbol}`)} />
                     <div>
@@ -251,6 +259,15 @@ export const StockDetail: React.FC<DetailProps> = ({ stock, onBack, onToggleWatc
                         {isUp ? <TrendingUp size={16}/> : <TrendingUp size={16} className="rotate-180"/>}
                         {isUp ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent}%) <span className="text-gray-400 text-xs font-normal ml-1">1D</span>
                     </p>
+                    
+                    {userHolding && (
+                        <div className="mt-3 flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                            <Wallet size={16} className="text-blue-600 dark:text-blue-400"/>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">You own:</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{userHolding.quantity} Qty</span>
+                            <span className="text-xs text-gray-400">(@ ₹{userHolding.avgPrice.toFixed(2)})</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="h-64 w-full mb-8 border-b border-gray-100 dark:border-gray-800 pb-4">
@@ -286,7 +303,11 @@ export const StockDetail: React.FC<DetailProps> = ({ stock, onBack, onToggleWatc
             </div>
 
             <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 flex gap-4">
-                <button className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl active:scale-95 transition-transform">
+                <button 
+                    onClick={onSell}
+                    disabled={!userHolding || userHolding.quantity <= 0}
+                    className="flex-1 py-3 bg-red-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold rounded-xl active:scale-95 transition-transform"
+                >
                     SELL
                 </button>
                 <button onClick={onBuy} className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl active:scale-95 transition-transform">
