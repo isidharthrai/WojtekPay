@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Plus, ChevronLeft, Landmark, CreditCard, User, 
@@ -22,8 +21,8 @@ export const MobileTransfer: React.FC<MobileProps> = ({ contacts, onBack, onSele
   const [error, setError] = useState<string | null>(null);
 
   const filtered = contacts.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.upiId.toLowerCase().includes(search.toLowerCase())
+    (c.name?.toLowerCase() || '').includes(search?.toLowerCase() || '') || 
+    (c.upiId?.toLowerCase() || '').includes(search?.toLowerCase() || '')
   );
 
   useEffect(() => {
@@ -290,6 +289,9 @@ export const IntlTransfer: React.FC<IntlProps> = ({ onBack, onBookTransfer }) =>
     const convertedAmount = amount ? (Number(amount) * RATES[currency]) : 0;
     const totalPayable = convertedAmount + FEES;
 
+    // Validation: 8 or 11 alphanumeric characters
+    const isSwiftValid = /^[A-Z0-9]{8}$|^[A-Z0-9]{11}$/.test(swift);
+
     return (
         <div className="h-full flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
             {/* Custom Header with Gradient */}
@@ -364,20 +366,27 @@ export const IntlTransfer: React.FC<IntlProps> = ({ onBack, onBookTransfer }) =>
                             placeholder="Recipient Name (e.g. John Doe)"
                             className="w-full bg-transparent px-4 py-3 outline-none border-b border-gray-100 dark:border-gray-700 dark:text-white placeholder:text-gray-400"
                         />
-                        <input 
-                            type="text" 
-                            value={swift} onChange={e => setSwift(e.target.value.toUpperCase())}
-                            placeholder="SWIFT / IBAN Code"
-                            className="w-full bg-transparent px-4 py-3 outline-none dark:text-white font-mono uppercase placeholder:text-gray-400"
-                        />
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                value={swift} onChange={e => setSwift(e.target.value.toUpperCase())}
+                                placeholder="SWIFT Code (8 or 11 chars)"
+                                maxLength={11}
+                                className={`w-full bg-transparent px-4 py-3 outline-none font-mono uppercase placeholder:text-gray-400 transition-colors ${swift && !isSwiftValid ? 'text-red-500' : 'dark:text-white'}`}
+                            />
+                            {swift && isSwiftValid && <CheckCircle2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500" />}
+                        </div>
                     </div>
+                    {swift && !isSwiftValid && (
+                        <p className="text-red-500 text-xs ml-1 flex items-center gap-1"><AlertCircle size={10}/> Invalid SWIFT format (8 or 11 alphanumeric)</p>
+                    )}
                 </div>
             </div>
 
             <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
                 <button 
                     onClick={() => onBookTransfer({ amountInr: totalPayable, currency, amountForeign: Number(amount), recipient })}
-                    disabled={!amount || !recipient || !swift}
+                    disabled={!amount || !recipient || !isSwiftValid}
                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-200 dark:shadow-none disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2"
                 >
                     Book Transfer <ArrowRight size={20}/>
