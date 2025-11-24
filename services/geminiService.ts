@@ -1,10 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PaymentIntent } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize lazily to prevent runtime crashes if process.env is not immediately available
+const getAiClient = () => {
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 export const parsePaymentIntent = async (text: string): Promise<PaymentIntent | null> => {
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Analyze this payment request: "${text}".
@@ -50,6 +54,7 @@ export const parsePaymentIntent = async (text: string): Promise<PaymentIntent | 
 
 export const getSupportResponse = async (history: {role: string, parts: {text: string}[]}[], message: string, context: string): Promise<string> => {
   try {
+    const ai = getAiClient();
     const chat = ai.chats.create({
         model: 'gemini-2.5-flash',
         config: {
