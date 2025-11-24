@@ -27,7 +27,7 @@ WojtekPay is a next-generation UPI payment simulation application built with **R
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/wojtekpay.git
+    git clone https://github.com/isidharthrai/wojtekpay.git
     cd wojtekpay
     ```
 
